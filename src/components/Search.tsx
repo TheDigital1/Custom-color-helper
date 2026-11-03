@@ -7,9 +7,14 @@ interface Props {
   /** Bumped when more brands finish loading, so results refresh. */
   dataVersion: number;
   onPick(ref: PaintRef): void;
+  /** Accessible name; must be unique on the page. */
+  label?: string;
+  placeholder?: string;
+  /** Unique id for the results list. */
+  listId?: string;
 }
 
-export function Search({ dataVersion, onPick }: Props) {
+export function Search({ dataVersion, onPick, label = 'Search paint colors by name or code', placeholder = 'Search paint name or code', listId = 'search-results' }: Props) {
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -37,12 +42,12 @@ export function Search({ dataVersion, onPick }: Props) {
         <SearchIcon />
         <input
           type="search"
-          placeholder="Search paint name or code"
-          aria-label="Search paint colors by name or code"
+          placeholder={placeholder}
+          aria-label={label}
           value={q}
           role="combobox"
           aria-expanded={open && hits.length > 0}
-          aria-controls="search-results"
+          aria-controls={listId}
           autocomplete="off"
           enterKeyHint="search"
           onInput={(e) => {
@@ -64,7 +69,7 @@ export function Search({ dataVersion, onPick }: Props) {
         />
       </label>
       {open && q.trim() && (
-        <ul id="search-results" class="search-results" role="listbox">
+        <ul id={listId} class="search-results" role="listbox">
           {hits.length === 0 && <li class="search-empty">No matching colors in the loaded brands.</li>}
           {hits.map((h, i) => {
             const p = paintInfo(h)!;

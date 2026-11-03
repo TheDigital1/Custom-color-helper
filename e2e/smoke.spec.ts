@@ -5,7 +5,7 @@ const sliderValue = async (page: Page, id: string) =>
 
 test('search Alabaster, lock LRV, move warmth: LRV stays fixed', async ({ page }) => {
   await page.goto('./');
-  const search = page.getByRole('combobox', { name: /search paint/i });
+  const search = page.getByRole('combobox', { name: 'Search paint colors by name or code' });
   await search.fill('alabaster');
   await page.getByRole('option').filter({ hasText: 'Alabaster' }).first().click();
   await expect(page.locator('.panel-name').first()).toHaveText('Alabaster');

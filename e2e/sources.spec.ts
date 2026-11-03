@@ -14,7 +14,7 @@ test('per-color source and hex disagreements between sources are shown', async (
   await expect(page.locator('.brand-table tr', { hasText: 'Behr' })).toContainText('Test fixture, Third test source');
 
   // A color that only exists in the second source is searchable and shows its source.
-  await page.getByRole('combobox', { name: /search paint/i }).fill('rodda two');
+  await page.getByRole('combobox', { name: 'Search paint colors by name or code' }).fill('rodda two');
   await page.getByRole('option').first().click();
   await expect(original.locator('.panel-name')).toHaveText('Fixture Rodda Two');
   await expect(original).toContainText('Source: Second test source');

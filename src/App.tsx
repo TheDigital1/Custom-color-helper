@@ -4,6 +4,7 @@ import { ciede2000, deltaELabel } from './color/ciede2000';
 import { findMatches, type MatchResult } from './color/match';
 import { findStrengthFormulas, type StrengthFormula } from './color/strength';
 import { StoreHelp } from './components/StoreHelp';
+import { CompareTwo } from './components/CompareTwo';
 import { SLIDERS, sliderValues, type SliderGroup, type SliderId } from './color/sliders';
 import { solve } from './color/solver';
 import { sliderTrack } from './color/tracks';
@@ -400,6 +401,26 @@ export function App() {
             originalName={original?.name ?? 'Original'}
             render={render}
             onAssign={(s, c) => setRoom((r) => ({ ...r, [s]: c }))}
+          />
+        </details>
+      </section>
+      <section class="extras extras-wide" aria-label="Compare two colors">
+        <details class="extra-section" open>
+          <summary>
+            <h2>Compare two colors</h2>
+          </summary>
+          <CompareTwo
+            dataVersion={dataVersion}
+            render={render}
+            current={state.current}
+            original={original}
+            onUseAsOriginal={async (key) => {
+              const ref = await resolvePaintKey(key);
+              if (!ref) return;
+              setDataVersion((v) => v + 1);
+              pickPaint(ref);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
           />
         </details>
       </section>
