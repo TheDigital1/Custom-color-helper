@@ -1,3 +1,4 @@
+import { TouchSafeRange } from './TouchSafeRange';
 import type { SliderDef } from '../color/sliders';
 
 interface Props {
@@ -59,16 +60,15 @@ export function SliderRow({ def, value, locked, limited, originalValue, track, o
         <button type="button" class="icon-btn nudge" aria-label={`Decrease ${def.label}`} disabled={locked} onClick={() => nudge(-1)}>
           −
         </button>
-        <input
+        <TouchSafeRange
           id={`s-${def.id}`}
-          type="range"
           min={def.min}
           max={def.max}
           step={def.step}
           value={value}
           disabled={locked}
           style={track ? { '--track': track } : undefined}
-          onInput={(e) => onMove(parseFloat((e.currentTarget as HTMLInputElement).value))}
+          onValue={(v) => onMove(v)}
         />
         <button type="button" class="icon-btn nudge" aria-label={`Increase ${def.label}`} disabled={locked} onClick={() => nudge(1)}>
           +

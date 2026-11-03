@@ -437,6 +437,21 @@ h2 {
   background: var(--surface-2);
 }
 
+/* Pointer input is handled by the TouchSafeRange wrapper (see TouchSafeRange.tsx). */
+.tsr {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  touch-action: pan-y;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.tsr.disabled {
+  cursor: default;
+}
+
 input[type='range'] {
   flex: 1;
   min-width: 0;
@@ -445,7 +460,17 @@ input[type='range'] {
   background: transparent;
   -webkit-appearance: none;
   appearance: none;
-  touch-action: pan-y;
+  pointer-events: none;
+}
+
+.tsr.dragging input[type='range']::-webkit-slider-thumb {
+  transform: scale(1.2);
+  border-color: var(--accent);
+}
+
+.tsr.dragging input[type='range']::-moz-range-thumb {
+  transform: scale(1.2);
+  border-color: var(--accent);
 }
 
 input[type='range']:disabled {

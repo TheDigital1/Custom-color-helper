@@ -1,3 +1,4 @@
+import { TouchSafeRange } from './TouchSafeRange';
 import { LIGHTING, type LightingId } from '../color/lighting';
 
 interface Props {
@@ -25,14 +26,13 @@ export function LightingControls({ preset, adaptation, onPreset, onAdaptation }:
           <span class="lighting-label">
             Eye adapts <strong>{Math.round(adaptation * 100)}%</strong>
           </span>
-          <input
-            type="range"
+          <TouchSafeRange
             min={0}
             max={100}
             step={1}
             value={Math.round(adaptation * 100)}
-            aria-label="How much your eye adapts to the light"
-            onInput={(e) => onAdaptation(parseFloat((e.currentTarget as HTMLInputElement).value) / 100)}
+            ariaLabel="How much your eye adapts to the light"
+            onValue={(v) => onAdaptation(v / 100)}
           />
         </label>
       )}
