@@ -9,6 +9,10 @@ import { getLoadedBrand, loadBrand, loadIndex, loadedBrands, paintInfo, type Pai
 import { loadJSON, saveJSON } from './storage';
 import { MatchesSheet } from './components/MatchesSheet';
 import { LightingControls } from './components/LightingControls';
+import { Favorites } from './components/Favorites';
+import { DEFAULT_ROOM, Room, type RoomAssignments } from './components/Room';
+import { addFavorite, favoriteFromColor, favoriteFromPaint, type Favorite } from './favorites';
+import { resolvePaintKey } from './data/store';
 import { LIGHTING_BY_ID, makeRenderer, type LightingId } from './color/lighting';
 import type { DataIndex } from './data/types';
 import { initialState, reducer } from './state';
@@ -52,6 +56,10 @@ export function App() {
   const [brandOnly, setBrandOnly] = useState<boolean>(() => loadJSON('pct.brandOnly', false));
   const [pinned, setPinned] = useState<PaintRef | null>(null);
   const [loadingBrands, setLoadingBrands] = useState(0);
+  const [favorites, setFavorites] = useState<Favorite[]>(() => loadJSON('pct.favorites', []));
+  const [room, setRoom] = useState<RoomAssignments>(() => ({ ...DEFAULT_ROOM, ...loadJSON<Partial<RoomAssignments>>('pct.room', {}) }));
+  useEffect(() => saveJSON('pct.favorites', favorites), [favorites]);
+  useEffect(() => saveJSON('pct.room', room), [room]);
   const [lighting, setLighting] = useState<LightingId>('d65');
   const [adaptation, setAdaptation] = useState(0.6);
   const render = useMemo(() => makeRenderer({ preset: LIGHTING_BY_ID[lighting], adaptation }), [lighting, adaptation]);
@@ -240,6 +248,44 @@ export function App() {
           ))}
         </section>
       </div>
+
+      <section class="extras" aria-label="Saved colors and room">
+        <details class="extra-section" open>
+          <summary>
+            <h2>Saved colors</h2>
+          </summary>
+          <Favorites
+            favorites={favorites}
+            onSaveCurrent={() => setFavorites((f) => addFavorite(f, favoriteFromColor(state.current, state.original)))}
+            onSaveOriginal={() => {
+              const fav = state.original ? favoriteFromPaint(state.original) : null;
+              if (fav) setFavorites((f) => addFavorite(f, fav));
+            }}
+            onRemove={(id) => setFavorites((f) => f.filter((x) => x.id !== id))}
+            onUse={async (f) => {
+              const ref = f.paint ? await resolvePaintKey(f.paint) : null;
+              if (ref) {
+                setDataVersion((v) => v + 1);
+                pickPaint(ref);
+              } else dispatch({ type: 'setColor', lab: f.oklab });
+            }}
+          />
+        </details>
+        <details class="extra-section" open>
+          <summary>
+            <h2>Room mockup</h2>
+          </summary>
+          <Room
+            assignments={room}
+            favorites={favorites}
+            current={state.current}
+            original={state.originalLab}
+            originalName={original?.name ?? 'Original'}
+            render={render}
+            onAssign={(s, c) => setRoom((r) => ({ ...r, [s]: c }))}
+          />
+        </details>
+      </section>
       <Footer index={index} />
     </div>
   );

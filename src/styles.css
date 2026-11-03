@@ -934,3 +934,132 @@ input[type='range']::-moz-range-thumb {
   align-items: center;
   cursor: pointer;
 }
+
+/* ---------- Saved colors and room ---------- */
+.extras {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 12px;
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 900px) {
+  .extras {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    padding: 0 16px;
+    align-items: start;
+  }
+}
+
+.extra-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 12px 12px;
+  min-width: 0;
+}
+
+.extra-section > summary {
+  list-style: none;
+  cursor: pointer;
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+}
+
+.extra-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.extra-section > summary h2 {
+  margin: 0;
+}
+
+.extra-section > summary::after {
+  content: '▾';
+  margin-left: auto;
+  color: var(--muted);
+}
+
+.extra-section:not([open]) > summary::after {
+  content: '▸';
+}
+
+.fav-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.room-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.room-assign {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.room-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--tap);
+}
+
+.room-row-label {
+  flex: none;
+  width: 6.5em;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.room-row select,
+.board-select {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  min-height: var(--tap);
+  padding: 0 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.contrast-table {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.contrast-table caption {
+  text-align: left;
+  font-weight: 600;
+  padding-bottom: 4px;
+}
+
+.contrast-table th {
+  text-align: left;
+  font-weight: 400;
+}
+
+.contrast-table th,
+.contrast-table td {
+  padding: 6px 4px;
+  border-top: 1px solid var(--border);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
