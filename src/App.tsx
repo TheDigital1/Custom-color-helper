@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'preact/hooks';
-import { hexToOklab, oklabToHex, type OKLab } from './color/convert';
+import { hexToOklab, oklabToHex, oklabToLab, type OKLab } from './color/convert';
+import { deltaELabel } from './color/ciede2000';
+import { findMatches, type MatchResult } from './color/match';
 import { SLIDERS, sliderValues, type SliderGroup, type SliderId } from './color/sliders';
 import { solve } from './color/solver';
 import { sliderTrack } from './color/tracks';
 import { loadBrand, loadIndex, loadedBrands, paintInfo, type PaintRef } from './data/store';
 import type { DataIndex } from './data/types';
 import { initialState, reducer } from './state';
-import { Compare, type Panel } from './components/Compare';
+import { Compare, type CompareMode, type Panel } from './components/Compare';
 import { Footer } from './components/Footer';
 import { Search } from './components/Search';
 import { RedoIcon, ResetIcon, SliderRow, UndoIcon } from './components/SliderRow';
@@ -15,6 +17,7 @@ const FALLBACK: OKLab = hexToOklab('#EDEAE0')!;
 
 const GROUPS: { id: SliderGroup; title: string }[] = [
   { id: 'main', title: 'Adjust' },
+  { id: 'undertone', title: 'Undertone pulls' },
   { id: 'rgb', title: 'RGB' },
 ];
 
@@ -32,6 +35,18 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [dataVersion, setDataVersion] = useState(0);
   const [state, dispatch] = useReducer(reducer, FALLBACK, initialState);
+  const [compareMode, setCompareMode] = useState<CompareMode>('side');
+  const [nestedOuter, setNestedOuter] = useState<'original' | 'modified'>('original');
+  const [matches, setMatches] = useState<MatchResult | null>(null);
+
+  // Nearest-paint search, debounced while dragging.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const brands = loadedBrands();
+      if (brands.length) setMatches(findMatches(brands, oklabToLab(state.current), { perBrand: 3, overall: 5 }));
+    }, 50);
+    return () => clearTimeout(t);
+  }, [state.current, dataVersion]);
 
   // Load the index, then every brand.
   useEffect(() => {
@@ -82,10 +97,22 @@ export function App() {
   }, []);
 
   const original = state.original ? paintInfo(state.original) : null;
+  const nearest = matches?.overall[0];
+  const nearestPaint = nearest ? paintInfo(nearest) : null;
   const panels: Panel[] = [
-    { key: 'original', title: 'Original', lab: state.originalLab, paint: original },
-    { key: 'modified', title: 'Modified', lab: state.current, paint: null, subtitle: oklabToHex(state.current).toUpperCase() },
+    { key: 'original', title: 'Original', lab: state.originalLab, display: oklabToHex(state.originalLab), paint: original },
+    { key: 'modified', title: 'Modified', lab: state.current, display: oklabToHex(state.current), paint: null, subtitle: oklabToHex(state.current).toUpperCase() },
   ];
+  if (nearestPaint && nearest) {
+    panels.push({
+      key: 'third',
+      title: 'Nearest paint',
+      lab: nearestPaint.oklab,
+      display: nearestPaint.hex,
+      paint: nearestPaint,
+      extra: `ΔE ${nearest.de.toFixed(1)} · ${deltaELabel(nearest.de)}`,
+    });
+  }
 
   return (
     <div class="app">
@@ -109,7 +136,13 @@ export function App() {
 
       <div class="layout">
         <section class="compare" aria-label="Color comparison">
-          <Compare panels={panels} />
+          <Compare
+            panels={panels}
+            mode={compareMode}
+            onMode={setCompareMode}
+            nestedOuter={nestedOuter}
+            onSwapNested={() => setNestedOuter((o) => (o === 'original' ? 'modified' : 'original'))}
+          />
         </section>
 
         <section class="controls" aria-label="Adjustments">

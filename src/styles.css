@@ -303,7 +303,7 @@ h2 {
 .swatch {
   display: block;
   width: 100%;
-  height: clamp(96px, 22vh, 220px);
+  height: clamp(80px, 15vh, 220px);
   border: 0;
   border-radius: var(--radius);
   box-shadow: inset 0 0 0 1px rgb(127 127 127 / 0.3);
@@ -500,4 +500,120 @@ input[type='range']::-moz-range-thumb {
   padding: 16px;
   max-width: 1280px;
   margin: 0 auto;
+}
+
+/* ---------- Compare modes ---------- */
+.compare-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.compare-toolbar .text-btn {
+  min-height: 36px;
+  font-size: 0.85rem;
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.segmented button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.segmented button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+@media (pointer: coarse) {
+  .segmented button,
+  .compare-toolbar .text-btn {
+    min-height: var(--tap);
+  }
+}
+
+.compare-nested {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.nested-swatch {
+  position: relative;
+  width: 100%;
+  height: clamp(120px, 20vh, 460px);
+  border: 0;
+  padding: 0;
+  border-radius: var(--radius);
+  box-shadow: inset 0 0 0 1px rgb(127 127 127 / 0.3);
+  cursor: pointer;
+}
+
+@media (min-width: 900px) {
+  .nested-swatch {
+    height: clamp(240px, 46vh, 520px);
+  }
+}
+
+.nested-inner,
+.fullscreen-inner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 38%;
+  aspect-ratio: 1;
+  max-height: 60%;
+  transform: translate(-50%, -50%);
+  border-radius: 6px;
+}
+
+.fullscreen-inner {
+  width: 34vmin;
+  max-height: none;
+}
+
+.nested-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.nested-labels .panel-label {
+  padding-top: 0;
+}
+
+.nested-tip,
+.compare-note {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.compare-note {
+  margin-top: 6px;
+}
+
+.panel-extra {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.panel-lrv {
+  white-space: normal;
 }
