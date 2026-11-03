@@ -1063,3 +1063,82 @@ input[type='range']::-moz-range-thumb {
   text-align: right;
   white-space: nowrap;
 }
+
+/* ---------- Palettes ---------- */
+.palette-new,
+.palette-head {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.text-input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tap);
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 16px;
+}
+
+.palette-strip {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 8px;
+}
+
+.palette-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 0.8rem;
+}
+
+.palette-item .small-btn {
+  align-self: flex-start;
+}
+
+.palette-swatch {
+  height: 64px;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgb(127 127 127 / 0.3);
+}
+
+.palette-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.palette-meta {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(100px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 60;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 0.9rem;
+  box-shadow: var(--shadow);
+}
+
+.text-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}

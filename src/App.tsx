@@ -10,6 +10,10 @@ import { loadJSON, saveJSON } from './storage';
 import { MatchesSheet } from './components/MatchesSheet';
 import { LightingControls } from './components/LightingControls';
 import { Favorites } from './components/Favorites';
+import { Palettes } from './components/Palettes';
+import type { Board } from './palette';
+import { decodeState, encodeState } from './share';
+import { paintKey } from './data/store';
 import { DEFAULT_ROOM, Room, type RoomAssignments } from './components/Room';
 import { addFavorite, favoriteFromColor, favoriteFromPaint, type Favorite } from './favorites';
 import { resolvePaintKey } from './data/store';
@@ -19,7 +23,7 @@ import { initialState, reducer } from './state';
 import { Compare, type CompareMode, type Panel } from './components/Compare';
 import { Footer } from './components/Footer';
 import { Search } from './components/Search';
-import { RedoIcon, ResetIcon, SliderRow, UndoIcon } from './components/SliderRow';
+import { RedoIcon, ResetIcon, ShareIcon, SliderRow, UndoIcon } from './components/SliderRow';
 
 const FALLBACK: OKLab = hexToOklab('#EDEAE0')!;
 
@@ -60,6 +64,17 @@ export function App() {
   const [room, setRoom] = useState<RoomAssignments>(() => ({ ...DEFAULT_ROOM, ...loadJSON<Partial<RoomAssignments>>('pct.room', {}) }));
   useEffect(() => saveJSON('pct.favorites', favorites), [favorites]);
   useEffect(() => saveJSON('pct.room', room), [room]);
+  const [boards, setBoards] = useState<Board[]>(() => loadJSON('pct.boards', []));
+  const [activeBoard, setActiveBoard] = useState<string | null>(() => loadJSON('pct.activeBoard', null));
+  useEffect(() => saveJSON('pct.boards', boards), [boards]);
+  useEffect(() => saveJSON('pct.activeBoard', activeBoard), [activeBoard]);
+  const [toast, setToast] = useState<string | null>(null);
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2500);
+    return () => clearTimeout(t);
+  }, [toast]);
+  const [ready, setReady] = useState(false);
   const [lighting, setLighting] = useState<LightingId>('d65');
   const [adaptation, setAdaptation] = useState(0.6);
   const render = useMemo(() => makeRenderer({ preset: LIGHTING_BY_ID[lighting], adaptation }), [lighting, adaptation]);
@@ -99,14 +114,64 @@ export function App() {
     loadIndex()
       .then(async (idx) => {
         setIndex(idx);
-        const startBrand = idx.brands.find((b) => b.id === 'sw') ?? idx.brands[0];
-        if (!startBrand) return;
-        await ensureBrand(startBrand.id);
-        const ref = defaultPaint();
-        if (ref) dispatch({ type: 'selectPaint', ref, lab: paintInfo(ref)!.oklab });
+        const shared = decodeState(location.hash);
+        if (shared) {
+          const ref = shared.paint ? await resolvePaintKey(shared.paint) : null;
+          if (ref) setDataVersion((v) => v + 1);
+          const originalLab = ref ? paintInfo(ref)!.oklab : shared.originalLab ?? shared.current ?? FALLBACK;
+          dispatch({
+            type: 'restore',
+            snapshot: { original: ref, originalLab, current: shared.current ?? originalLab, locks: shared.locks },
+          });
+          setLighting(shared.lighting);
+          setAdaptation(shared.adaptation);
+          if (shared.paint && !ref) setError(`The shared paint "${shared.paint}" is not in this dataset; showing its color instead.`);
+        } else {
+          const startBrand = idx.brands.find((b) => b.id === 'sw') ?? idx.brands[0];
+          if (startBrand) {
+            await ensureBrand(startBrand.id);
+            const ref = defaultPaint();
+            if (ref) dispatch({ type: 'restore', snapshot: { original: ref, originalLab: paintInfo(ref)!.oklab, current: paintInfo(ref)!.oklab, locks: {} } });
+          }
+        }
+        setReady(true);
       })
       .catch((e: Error) => setError(e.message));
   }, []);
+
+  // Keep the URL in sync with the state so it can be bookmarked or shared.
+  const shareHash = encodeState({
+    paint: state.original ? paintKey(state.original) : null,
+    current: state.current,
+    originalLab: state.original ? null : state.originalLab,
+    locks: state.locks,
+    lighting,
+    adaptation,
+  });
+  useEffect(() => {
+    if (!ready) return;
+    const t = setTimeout(() => history.replaceState(null, '', '#' + shareHash), 250);
+    return () => clearTimeout(t);
+  }, [shareHash, ready]);
+
+  const share = async () => {
+    const url = location.href.split('#')[0] + '#' + shareHash;
+    history.replaceState(null, '', '#' + shareHash);
+    if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+      try {
+        await navigator.share({ title: 'Paint Color Tuner', url });
+        return;
+      } catch {
+        /* cancelled or unavailable: fall back to copying */
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setToast('Link copied to clipboard');
+    } catch {
+      setToast('Copy this page address to share it');
+    }
+  };
 
   const pickPaint = useCallback((ref: PaintRef) => {
     const p = paintInfo(ref);
@@ -175,6 +240,9 @@ export function App() {
           </button>
           <button type="button" class="icon-btn" aria-label="Redo" disabled={!state.future.length} onClick={() => dispatch({ type: 'redo' })}>
             <RedoIcon />
+          </button>
+          <button type="button" class="icon-btn" aria-label="Share" onClick={share}>
+            <ShareIcon />
           </button>
         </div>
       </header>
@@ -273,6 +341,22 @@ export function App() {
         </details>
         <details class="extra-section" open>
           <summary>
+            <h2>Palettes</h2>
+          </summary>
+          <Palettes
+            boards={boards}
+            activeId={activeBoard}
+            favorites={favorites}
+            onBoards={setBoards}
+            onActive={setActiveBoard}
+            onAddCurrent={(id) =>
+              setBoards((bs) => bs.map((b) => (b.id === id ? { ...b, items: [...b.items, favoriteFromColor(state.current, state.original)] } : b)))
+            }
+            notify={setToast}
+          />
+        </details>
+        <details class="extra-section" open>
+          <summary>
             <h2>Room mockup</h2>
           </summary>
           <Room
@@ -287,6 +371,11 @@ export function App() {
         </details>
       </section>
       <Footer index={index} />
+      {toast && (
+        <div class="toast" role="status">
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
