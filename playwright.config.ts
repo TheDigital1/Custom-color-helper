@@ -12,7 +12,7 @@ export default defineConfig({
   ],
   webServer: {
     command:
-      'tsx scripts/build-data.ts --input tests/fixtures/paintdb-sample.json --out .e2e/public/data && ' +
+      'tsx scripts/build-data.ts --sources tests/fixtures/sources.json --out .e2e/public/data && ' +
       'PUBLIC_DIR=.e2e/public vite build --outDir .e2e/dist --emptyOutDir && ' +
       'vite preview --outDir .e2e/dist --port 4173 --strictPort --host 127.0.0.1',
     url: 'http://127.0.0.1:4173/',

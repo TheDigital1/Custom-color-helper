@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { approxLrv, type OKLab } from '../color/convert';
-import type { PaintInfo } from '../data/store';
+import { sourceCount, type PaintInfo } from '../data/store';
 
 export interface Panel {
   key: 'original' | 'modified' | 'third';
@@ -37,6 +37,12 @@ function PanelLabel({ p }: { p: Panel }) {
       <span class="panel-meta panel-lrv">
         {p.paint?.lrv != null ? `LRV ${p.paint.lrv} · ` : ''}approx. LRV {approxLrv(p.lab).toFixed(1)}
       </span>
+      {p.paint && sourceCount() > 1 && <span class="panel-meta panel-source">Source: {p.paint.source}</span>}
+      {p.paint?.altHex.map((a) => (
+        <span class="panel-meta alt-hex" key={a.source} title="The same color has a different hex value in another data source">
+          <span class="chip chip-xs" style={{ background: a.hex }} /> {a.source}: {a.hex.toUpperCase()} (vs {p.paint!.hex.toUpperCase()})
+        </span>
+      ))}
       {p.extra && <span class="panel-meta panel-extra">{p.extra}</span>}
     </div>
   );

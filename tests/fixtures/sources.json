@@ -1,0 +1,30 @@
+[
+  {
+    "id": "fixture",
+    "name": "Test fixture",
+    "url": "",
+    "license": "test data",
+    "files": ["tests/fixtures/paintdb-sample.json"],
+    "required": true,
+    "snapshot": "2026-01-01"
+  },
+  {
+    "id": "fixture2",
+    "name": "Second test source",
+    "url": "",
+    "license": "test data",
+    "files": ["tests/fixtures/second-source-sample.csv"],
+    "defaultBrand": "Rodda",
+    "required": true,
+    "snapshot": "2026-01-01"
+  },
+  {
+    "id": "fixture3",
+    "name": "Third test source",
+    "url": "",
+    "license": "test data",
+    "files": ["tests/fixtures/third-source-sample.csv"],
+    "required": true,
+    "snapshot": "2026-01-01"
+  }
+]

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'preact/hooks';
 import { deltaELabel } from '../color/ciede2000';
 import type { Match, MatchResult } from '../color/match';
-import { paintInfo, type PaintRef } from '../data/store';
+import { paintInfo, sourceCount, type PaintRef } from '../data/store';
 import type { BrandSummary } from '../data/types';
 
 interface Props {
@@ -31,6 +31,8 @@ function MatchRow({ m, pinned, onUse, onPin }: { m: Match; pinned: boolean; onUs
           {p.brandName}
           {p.code ? ` · ${p.code}` : ''}
           {p.lrv != null ? ` · LRV ${p.lrv}` : ''}
+          {sourceCount() > 1 ? ` · ${p.source}` : ''}
+          {p.altHex.length > 0 && <span title="Data sources disagree on this color's hex"> · ⚠ hex differs by source</span>}
         </span>
         <span class="match-de">
           ΔE {m.de.toFixed(1)} · <span class={`de-label de-${deltaELabel(m.de).replace(' ', '-')}`}>{deltaELabel(m.de)}</span>

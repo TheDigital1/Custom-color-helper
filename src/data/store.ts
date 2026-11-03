@@ -73,6 +73,8 @@ export function loadBrand(id: string): Promise<LoadedBrand> {
 }
 
 export const loadedBrands = (): LoadedBrand[] => [...loaded.values()];
+/** Number of data sources; per-color sources are only worth showing when there are several. */
+export const sourceCount = () => indexValue?.sources.length ?? 1;
 export const getLoadedBrand = (id: string) => loaded.get(id);
 
 /** Register brand data directly (tests). */
