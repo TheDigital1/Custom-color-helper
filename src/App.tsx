@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'preact/hooks';
 import { hexToOklab, oklabToHex, oklabToLab, type OKLab } from './color/convert';
-import { deltaELabel } from './color/ciede2000';
+import { ciede2000, deltaELabel } from './color/ciede2000';
 import { findMatches, type MatchResult } from './color/match';
 import { SLIDERS, sliderValues, type SliderGroup, type SliderId } from './color/sliders';
 import { solve } from './color/solver';
 import { sliderTrack } from './color/tracks';
-import { loadBrand, loadIndex, loadedBrands, paintInfo, type PaintRef } from './data/store';
+import { getLoadedBrand, loadBrand, loadIndex, loadedBrands, paintInfo, type PaintRef } from './data/store';
+import { loadJSON, saveJSON } from './storage';
+import { MatchesSheet } from './components/MatchesSheet';
 import type { DataIndex } from './data/types';
 import { initialState, reducer } from './state';
 import { Compare, type CompareMode, type Panel } from './components/Compare';
@@ -22,6 +24,12 @@ const GROUPS: { id: SliderGroup; title: string }[] = [
 ];
 
 /** Default starting paint: SW Alabaster when available, else the first color. */
+function deltaE(a: OKLab, b: OKLab): number {
+  const x = oklabToLab(a);
+  const y = oklabToLab(b);
+  return ciede2000(x[0], x[1], x[2], y[0], y[1], y[2]);
+}
+
 function defaultPaint(): PaintRef | null {
   const sw = loadedBrands().find((b) => b.id === 'sw');
   const i = sw ? sw.names.findIndex((n) => n.toLowerCase() === 'alabaster') : -1;
@@ -38,22 +46,49 @@ export function App() {
   const [compareMode, setCompareMode] = useState<CompareMode>('side');
   const [nestedOuter, setNestedOuter] = useState<'original' | 'modified'>('original');
   const [matches, setMatches] = useState<MatchResult | null>(null);
+  const [enabledBrands, setEnabledBrands] = useState<string[] | null>(() => loadJSON<string[] | null>('pct.brands', null));
+  const [brandOnly, setBrandOnly] = useState<boolean>(() => loadJSON('pct.brandOnly', false));
+  const [pinned, setPinned] = useState<PaintRef | null>(null);
+  const [loadingBrands, setLoadingBrands] = useState(0);
 
-  // Nearest-paint search, debounced while dragging.
+  const enabled = enabledBrands ?? index?.brands.map((b) => b.id) ?? [];
+  const originalBrand = state.original?.brand ?? null;
+  const matchBrandIds = brandOnly && originalBrand ? [originalBrand] : enabled;
+
+  useEffect(() => saveJSON('pct.brands', enabledBrands), [enabledBrands]);
+  useEffect(() => saveJSON('pct.brandOnly', brandOnly), [brandOnly]);
+
+  const ensureBrand = useCallback((id: string) => {
+    if (getLoadedBrand(id)) return Promise.resolve();
+    setLoadingBrands((n) => n + 1);
+    return loadBrand(id)
+      .then(() => setDataVersion((v) => v + 1))
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoadingBrands((n) => n - 1));
+  }, []);
+
+  // Lazy-load: brands enabled in the filter (plus the original's brand, loaded on selection).
+  useEffect(() => {
+    if (index) enabled.forEach((id) => index.brands.some((b) => b.id === id) && ensureBrand(id));
+  }, [index, enabled.join(',')]);
+
+  // Nearest-paint search over the selected brands, debounced while dragging.
   useEffect(() => {
     const t = setTimeout(() => {
-      const brands = loadedBrands();
-      if (brands.length) setMatches(findMatches(brands, oklabToLab(state.current), { perBrand: 3, overall: 5 }));
+      const brands = matchBrandIds.map(getLoadedBrand).filter((b) => b !== undefined);
+      setMatches(brands.length ? findMatches(brands, oklabToLab(state.current), { perBrand: 3, overall: 5 }) : null);
     }, 50);
     return () => clearTimeout(t);
-  }, [state.current, dataVersion]);
+  }, [state.current, dataVersion, matchBrandIds.join(',')]);
 
-  // Load the index, then every brand.
+  // Load the index and the starting paint's brand.
   useEffect(() => {
     loadIndex()
       .then(async (idx) => {
         setIndex(idx);
-        await Promise.all(idx.brands.map((b) => loadBrand(b.id).then(() => setDataVersion((v) => v + 1))));
+        const startBrand = idx.brands.find((b) => b.id === 'sw') ?? idx.brands[0];
+        if (!startBrand) return;
+        await ensureBrand(startBrand.id);
         const ref = defaultPaint();
         if (ref) dispatch({ type: 'selectPaint', ref, lab: paintInfo(ref)!.oklab });
       })
@@ -97,7 +132,10 @@ export function App() {
   }, []);
 
   const original = state.original ? paintInfo(state.original) : null;
-  const nearest = matches?.overall[0];
+  const pinnedPaint = pinned ? paintInfo(pinned) : null;
+  const nearest = pinnedPaint
+    ? { ...pinned!, de: deltaE(state.current, pinnedPaint.oklab) }
+    : matches?.overall[0];
   const nearestPaint = nearest ? paintInfo(nearest) : null;
   const panels: Panel[] = [
     { key: 'original', title: 'Original', lab: state.originalLab, display: oklabToHex(state.originalLab), paint: original },
@@ -106,7 +144,7 @@ export function App() {
   if (nearestPaint && nearest) {
     panels.push({
       key: 'third',
-      title: 'Nearest paint',
+      title: pinnedPaint ? 'Picked match' : 'Nearest paint',
       lab: nearestPaint.oklab,
       display: nearestPaint.hex,
       paint: nearestPaint,
@@ -135,6 +173,7 @@ export function App() {
       )}
 
       <div class="layout">
+        <div class="left-col">
         <section class="compare" aria-label="Color comparison">
           <Compare
             panels={panels}
@@ -144,6 +183,24 @@ export function App() {
             onSwapNested={() => setNestedOuter((o) => (o === 'original' ? 'modified' : 'original'))}
           />
         </section>
+          <MatchesSheet
+            result={matches}
+            brands={index?.brands ?? []}
+            enabled={enabled}
+            brandOnly={brandOnly}
+            originalBrand={originalBrand}
+            loading={loadingBrands > 0 || !index}
+            pinned={pinned}
+            onToggleBrand={(id) => setEnabledBrands(enabled.includes(id) ? enabled.filter((b) => b !== id) : [...enabled, id])}
+            onSetBrands={setEnabledBrands}
+            onBrandOnly={setBrandOnly}
+            onUseAsOriginal={(ref) => {
+              pickPaint(ref);
+              setPinned(null);
+            }}
+            onPin={setPinned}
+          />
+        </div>
 
         <section class="controls" aria-label="Adjustments">
           <div class="controls-bar">
