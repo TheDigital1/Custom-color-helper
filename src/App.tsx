@@ -228,6 +228,9 @@ export function App() {
       paint: nearestPaint,
       extra: `ΔE ${nearest.de.toFixed(1)} · ${deltaELabel(nearest.de)}`,
     });
+  } else {
+    // Placeholder keeps the layout stable until the first match search finishes.
+    panels.push({ key: 'third', title: 'Nearest paint', lab: state.current, display: 'transparent', paint: null, subtitle: 'Searching…', placeholder: true });
   }
 
   return (

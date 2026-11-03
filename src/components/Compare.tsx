@@ -11,6 +11,7 @@ export interface Panel {
   paint: PaintInfo | null;
   subtitle?: string;
   extra?: string;
+  placeholder?: boolean;
 }
 
 export type CompareMode = 'side' | 'nested';
@@ -27,6 +28,16 @@ interface Props {
 }
 
 function PanelLabel({ p }: { p: Panel }) {
+  if (p.placeholder) {
+    return (
+      <div class="panel-label">
+        <span class="panel-title">{p.title}</span>
+        <span class="panel-name">{p.subtitle}</span>
+        <span class="panel-meta">&nbsp;</span>
+        <span class="panel-meta">&nbsp;</span>
+      </div>
+    );
+  }
   return (
     <div class="panel-label">
       <span class="panel-title">{p.title}</span>
