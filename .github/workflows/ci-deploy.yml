@@ -48,8 +48,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      # Uses data/raw/ when the snapshot is committed, otherwise downloads it.
-      - run: npm run build:data -- --download
+      # Builds from the snapshot committed in data/raw/ (see data/sources.json).
+      - run: npm run build:data
       - run: npm run build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/

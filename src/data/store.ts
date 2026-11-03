@@ -4,8 +4,8 @@ import type { OKLab } from '../color/convert';
 export interface LoadedBrand extends BrandFile {
   labF: Float32Array;
   oklabF: Float32Array;
-  /** Lowercased "name code" for search. */
-  searchText: string[];
+  /** Lowercased "name code" for search; built on first search (see searchTextOf). */
+  searchText?: string[];
 }
 
 /** A reference to one named paint. */
@@ -50,8 +50,12 @@ export function prepareBrand(file: BrandFile): LoadedBrand {
     ...file,
     labF: Float32Array.from(file.lab),
     oklabF: Float32Array.from(file.oklab),
-    searchText: file.names.map((n, i) => `${n} ${file.codes[i]}`.toLowerCase()),
   };
+}
+
+export function searchTextOf(b: LoadedBrand): string[] {
+  b.searchText ??= b.names.map((n, i) => `${n} ${b.codes[i]}`.toLowerCase());
+  return b.searchText;
 }
 
 export function loadBrand(id: string): Promise<LoadedBrand> {

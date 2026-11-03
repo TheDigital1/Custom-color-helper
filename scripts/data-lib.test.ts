@@ -12,6 +12,7 @@ describe('data build', () => {
     expect(normalizeBrand('Benjamin Moore').id).toBe('bm');
     expect(normalizeBrand('Rodda Paint').id).toBe('rodda');
     expect(normalizeBrand('Farrow & Ball').id).toBe('fb');
+    expect(normalizeBrand('Kelly-Moore Paints').id).toBe('km');
     expect(normalizeBrand('Some New Brand').id).toBe('some-new-brand');
   });
 
@@ -45,6 +46,16 @@ describe('data build', () => {
     ]);
     expect(rows).toHaveLength(1);
     expect(dropped).toEqual({ badHex: 1, missingField: 1, duplicate: 1 });
+    // Codes that differ only by punctuation or spacing are different colors.
+    const distinct = normalizeRecords([
+      { brand: 'Kelly-Moore Paints', code: '7-1', name: 'A', hex: '#111111' },
+      { brand: 'Kelly-Moore Paints', code: '71', name: 'B', hex: '#222222' },
+      { brand: 'Dunn-Edwards', code: 'DEW 315', name: 'C', hex: '#333333' },
+      { brand: 'Dunn-Edwards', code: 'DEW315', name: 'D', hex: '#444444' },
+      { brand: 'Dunn-Edwards', code: 'dew315', name: 'D again', hex: '#444444' },
+    ]);
+    expect(distinct.rows).toHaveLength(4);
+    expect(distinct.dropped.duplicate).toBe(1);
   });
 
   it('packs brands with precomputed Lab, OKLab and Y, and reports expected brands', () => {

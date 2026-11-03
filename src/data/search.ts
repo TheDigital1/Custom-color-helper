@@ -1,4 +1,4 @@
-import type { LoadedBrand, PaintRef } from './store';
+import { searchTextOf, type LoadedBrand, type PaintRef } from './store';
 
 export interface SearchHit extends PaintRef {
   score: number;
@@ -33,8 +33,9 @@ export function searchPaints(brands: LoadedBrand[], query: string, limit = 40): 
   const hits: SearchHit[] = [];
   for (const b of brands) {
     const brandName = b.name.toLowerCase();
+    const texts = searchTextOf(b);
     for (let i = 0; i < b.count; i++) {
-      const text = b.searchText[i];
+      const text = texts[i];
       let score = 0;
       let ok = true;
       for (const t of tokens) {

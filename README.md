@@ -15,7 +15,8 @@ npm test                # unit tests (color math, solver, matching, data build)
 npm run test:e2e        # Playwright smoke tests at 390×844 and desktop, using fixture data
 ```
 
-`npm run build:data -- --download` fetches the PaintDB snapshot if it is not in `data/raw/`.
+The PaintDB snapshot (`data/raw/paintdb-colors.csv`, 50,762 colors from 25 brands) is committed;
+Rodda is not in it. To add another source, see `data/raw/README.md`.
 
 ## Deployment
 

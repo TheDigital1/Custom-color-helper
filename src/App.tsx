@@ -86,19 +86,25 @@ export function App() {
   useEffect(() => saveJSON('pct.brands', enabledBrands), [enabledBrands]);
   useEffect(() => saveJSON('pct.brandOnly', brandOnly), [brandOnly]);
 
-  const ensureBrand = useCallback((id: string) => {
-    if (getLoadedBrand(id)) return Promise.resolve();
+  /** Load brands in parallel and re-render once when they have all arrived. */
+  const ensureBrands = useCallback((ids: string[]) => {
+    const missing = ids.filter((id) => !getLoadedBrand(id));
+    if (!missing.length) return Promise.resolve();
     setLoadingBrands((n) => n + 1);
-    return loadBrand(id)
+    return Promise.all(missing.map((id) => loadBrand(id).catch((e: Error) => setError(e.message))))
       .then(() => setDataVersion((v) => v + 1))
-      .catch((e: Error) => setError(e.message))
       .finally(() => setLoadingBrands((n) => n - 1));
   }, []);
+  const ensureBrand = useCallback((id: string) => ensureBrands([id]), [ensureBrands]);
 
   // Lazy-load: brands enabled in the filter (plus the original's brand, loaded on selection).
+  // Waits until the starting paint is on screen so the first render isn't competing with it.
   useEffect(() => {
-    if (index) enabled.forEach((id) => index.brands.some((b) => b.id === id) && ensureBrand(id));
-  }, [index, enabled.join(',')]);
+    if (!index || !ready) return;
+    const ids = enabled.filter((id) => index.brands.some((b) => b.id === id));
+    const t = setTimeout(() => ensureBrands(ids), 0);
+    return () => clearTimeout(t);
+  }, [index, ready, enabled.join(',')]);
 
   // Nearest-paint search over the selected brands, debounced while dragging.
   useEffect(() => {

@@ -33,6 +33,7 @@ const BRAND_ALIASES: Record<string, { id: string; name: string }> = {
   farrowball: { id: 'fb', name: 'Farrow & Ball' },
   farrowandball: { id: 'fb', name: 'Farrow & Ball' },
   kellymoore: { id: 'km', name: 'Kelly-Moore' },
+  kellymoorepaints: { id: 'km', name: 'Kelly-Moore' },
   prattlambert: { id: 'pl', name: 'Pratt & Lambert' },
   prattandlambert: { id: 'pl', name: 'Pratt & Lambert' },
   dutchboy: { id: 'dutchboy', name: 'Dutch Boy' },
@@ -218,7 +219,10 @@ export function normalizeRecords(records: Record<string, unknown>[], defaultBran
 
 /** Identity of a color within a brand: code when present, otherwise name. */
 export function rowKey(brand: string, name: string, code: string): string {
-  return `${normalizeBrand(brand).id}|${code ? 'c:' + normKey(code) : 'n:' + normKey(name)}`;
+  // Codes are compared case-insensitively but keep punctuation and spaces: "7-1" and "71"
+  // (or "DEW 315" and "DEW315") are different colors in real data.
+  const exact = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
+  return `${normalizeBrand(brand).id}|${code ? 'c:' + exact(code) : 'n:' + exact(name)}`;
 }
 
 export function parseInput(text: string, fileName: string, defaultBrand?: string): NormalizeResult {
