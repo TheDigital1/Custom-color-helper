@@ -1,0 +1,12 @@
+[
+  {
+    "id": "paintdb",
+    "name": "PaintDB",
+    "url": "https://paintdb.com",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "files": ["data/raw/paintdb-colors.json", "data/raw/paintdb-colors.csv"],
+    "download": "https://paintdb.com/paintdb-colors.json",
+    "required": true
+  }
+]

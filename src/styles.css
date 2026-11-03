@@ -1,0 +1,6 @@
+:root { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color-scheme: light dark; }
+body { margin: 0; background: Canvas; color: CanvasText; }
+.phase0 { padding: 16px; max-width: 640px; margin: 0 auto; }
+.brand-table { border-collapse: collapse; width: 100%; }
+.brand-table td, .brand-table th { padding: 6px 8px; border-bottom: 1px solid #8884; text-align: left; }
+.footer { font-size: 12px; opacity: 0.8; padding: 16px; }
