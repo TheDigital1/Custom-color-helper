@@ -31,7 +31,7 @@ const W_GAMUT = 1e9;
 type Fn = (x: OKLab) => number;
 
 /** Nelder–Mead minimizer for 3 variables. */
-export function nelderMead(f: Fn, start: OKLab, step: number, maxIter = 800, tol = 1e-16): { x: OKLab; fx: number } {
+export function nelderMead(f: Fn, start: OKLab, step: number, maxIter = 500, tol = 1e-13): { x: OKLab; fx: number } {
   const n = 3;
   const pts: OKLab[] = [start.slice() as OKLab];
   for (let i = 0; i < n; i++) {
@@ -123,7 +123,10 @@ function minimize(f: Fn, starts: OKLab[]): OKLab {
     // Restarts with shrinking simplexes escape the premature collapse NM is prone to.
     for (const step of [0.01, 0.002, 3e-4, 5e-5]) {
       const r2 = nelderMead(f, r.x, step);
+      const gain = r.fx - r2.fx;
       if (r2.fx <= r.fx) r = r2;
+      // A restart that barely helps means we're at the minimum; skip the finer ones.
+      if (gain <= 1e-9 * Math.max(r.fx, 1e-12)) break;
     }
     if (!best || r.fx < best.fx) best = r;
   }
