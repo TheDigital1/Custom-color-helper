@@ -889,3 +889,48 @@ input[type='range']::-moz-range-thumb {
     padding-bottom: 0;
   }
 }
+
+/* ---------- Lighting ---------- */
+.lighting {
+  margin: 10px 0 4px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.lighting-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--tap);
+}
+
+.lighting-label {
+  flex: none;
+  min-width: 6.5em;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.lighting select {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tap);
+  padding: 0 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.lighting-note {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.lighting-note summary {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}

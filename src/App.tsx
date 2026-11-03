@@ -8,6 +8,8 @@ import { sliderTrack } from './color/tracks';
 import { getLoadedBrand, loadBrand, loadIndex, loadedBrands, paintInfo, type PaintRef } from './data/store';
 import { loadJSON, saveJSON } from './storage';
 import { MatchesSheet } from './components/MatchesSheet';
+import { LightingControls } from './components/LightingControls';
+import { LIGHTING_BY_ID, makeRenderer, type LightingId } from './color/lighting';
 import type { DataIndex } from './data/types';
 import { initialState, reducer } from './state';
 import { Compare, type CompareMode, type Panel } from './components/Compare';
@@ -50,6 +52,9 @@ export function App() {
   const [brandOnly, setBrandOnly] = useState<boolean>(() => loadJSON('pct.brandOnly', false));
   const [pinned, setPinned] = useState<PaintRef | null>(null);
   const [loadingBrands, setLoadingBrands] = useState(0);
+  const [lighting, setLighting] = useState<LightingId>('d65');
+  const [adaptation, setAdaptation] = useState(0.6);
+  const render = useMemo(() => makeRenderer({ preset: LIGHTING_BY_ID[lighting], adaptation }), [lighting, adaptation]);
 
   const enabled = enabledBrands ?? index?.brands.map((b) => b.id) ?? [];
   const originalBrand = state.original?.brand ?? null;
@@ -138,15 +143,15 @@ export function App() {
     : matches?.overall[0];
   const nearestPaint = nearest ? paintInfo(nearest) : null;
   const panels: Panel[] = [
-    { key: 'original', title: 'Original', lab: state.originalLab, display: oklabToHex(state.originalLab), paint: original },
-    { key: 'modified', title: 'Modified', lab: state.current, display: oklabToHex(state.current), paint: null, subtitle: oklabToHex(state.current).toUpperCase() },
+    { key: 'original', title: 'Original', lab: state.originalLab, display: render(state.originalLab), paint: original },
+    { key: 'modified', title: 'Modified', lab: state.current, display: render(state.current), paint: null, subtitle: oklabToHex(state.current).toUpperCase() },
   ];
   if (nearestPaint && nearest) {
     panels.push({
       key: 'third',
       title: pinnedPaint ? 'Picked match' : 'Nearest paint',
       lab: nearestPaint.oklab,
-      display: nearestPaint.hex,
+      display: render(nearestPaint.oklab),
       paint: nearestPaint,
       extra: `ΔE ${nearest.de.toFixed(1)} · ${deltaELabel(nearest.de)}`,
     });
@@ -181,6 +186,7 @@ export function App() {
             onMode={setCompareMode}
             nestedOuter={nestedOuter}
             onSwapNested={() => setNestedOuter((o) => (o === 'original' ? 'modified' : 'original'))}
+            note={lighting === 'd65' ? undefined : `Shown under ${LIGHTING_BY_ID[lighting].label}, eye ${Math.round(adaptation * 100)}% adapted (approximation). Matches use daylight.`}
           />
         </section>
           <MatchesSheet
@@ -209,6 +215,7 @@ export function App() {
               <ResetIcon /> Reset all
             </button>
           </div>
+          <LightingControls preset={lighting} adaptation={adaptation} onPreset={setLighting} onAdaptation={setAdaptation} />
           {GROUPS.map((g) => (
             <div class="slider-group" key={g.id}>
               <h2>{g.title}</h2>
