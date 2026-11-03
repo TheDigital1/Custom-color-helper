@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useReducer, useState } from 'preact/ho
 import { hexToOklab, oklabToHex, oklabToLab, type OKLab } from './color/convert';
 import { ciede2000, deltaELabel } from './color/ciede2000';
 import { findMatches, type MatchResult } from './color/match';
+import { findStrengthFormulas, type StrengthFormula } from './color/strength';
+import { StoreHelp } from './components/StoreHelp';
 import { SLIDERS, sliderValues, type SliderGroup, type SliderId } from './color/sliders';
 import { solve } from './color/solver';
 import { sliderTrack } from './color/tracks';
@@ -56,6 +58,7 @@ export function App() {
   const [compareMode, setCompareMode] = useState<CompareMode>('side');
   const [nestedOuter, setNestedOuter] = useState<'original' | 'modified'>('original');
   const [matches, setMatches] = useState<MatchResult | null>(null);
+  const [formulas, setFormulas] = useState<StrengthFormula[]>([]);
   const [enabledBrands, setEnabledBrands] = useState<string[] | null>(() => loadJSON<string[] | null>('pct.brands', null));
   const [brandOnly, setBrandOnly] = useState<boolean>(() => loadJSON('pct.brandOnly', false));
   const [pinned, setPinned] = useState<PaintRef | null>(null);
@@ -111,9 +114,17 @@ export function App() {
     const t = setTimeout(() => {
       const brands = matchBrandIds.map(getLoadedBrand).filter((b) => b !== undefined);
       setMatches(brands.length ? findMatches(brands, oklabToLab(state.current), { perBrand: 3, overall: 5 }) : null);
+      // Percentage-strength suggestions: best overall, plus the best from the original's brand.
+      const f = brands.length ? findStrengthFormulas(brands, state.current, { limit: 3 }) : [];
+      const own = originalBrand ? getLoadedBrand(originalBrand) : undefined;
+      if (own && !f.some((x) => x.brand === own.id)) {
+        const mine = findStrengthFormulas([own], state.current, { limit: 1 })[0];
+        if (mine && mine.de < 3) f.push(mine);
+      }
+      setFormulas(f);
     }, 50);
     return () => clearTimeout(t);
-  }, [state.current, dataVersion, matchBrandIds.join(',')]);
+  }, [state.current, dataVersion, matchBrandIds.join(','), originalBrand]);
 
   // Load the index and the starting paint's brand.
   useEffect(() => {
@@ -289,8 +300,21 @@ export function App() {
               pickPaint(ref);
               setPinned(null);
             }}
-            onPin={setPinned}
-          />
+            onPin={setPinned}>
+            <StoreHelp
+              notify={setToast}
+              input={{
+                target: state.current,
+                original,
+                nearest: matches?.overall[0] ? { paint: paintInfo(matches.overall[0])!, de: matches.overall[0].de } : null,
+                // Only worth suggesting when clearly closer than simply buying the nearest stock paint.
+                formulas: formulas.filter((f) => !matches?.overall[0] || f.de < matches.overall[0].de - 0.3).flatMap((f) => {
+                  const paint = paintInfo(f);
+                  return paint ? [{ paint, strength: f.strength, de: f.de, lab: f.lab }] : [];
+                }),
+              }}
+            />
+          </MatchesSheet>
         </div>
 
         <section class="controls" aria-label="Adjustments">

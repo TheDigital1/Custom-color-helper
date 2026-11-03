@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact';
 import { useRef, useState } from 'preact/hooks';
 import { deltaELabel } from '../color/ciede2000';
 import type { Match, MatchResult } from '../color/match';
@@ -17,6 +18,8 @@ interface Props {
   onBrandOnly(v: boolean): void;
   onUseAsOriginal(ref: PaintRef): void;
   onPin(ref: PaintRef | null): void;
+  /** Shown above the match lists (the "take it to the store" card). */
+  children?: ComponentChildren;
 }
 
 function MatchRow({ m, pinned, onUse, onPin }: { m: Match; pinned: boolean; onUse(): void; onPin(): void }) {
@@ -157,6 +160,7 @@ export function MatchesSheet(props: Props) {
             </button>
           </p>
         )}
+        {props.children}
         {result && result.overall.length > 0 && (
           <>
             <h3>Best overall</h3>

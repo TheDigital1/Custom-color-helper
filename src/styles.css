@@ -1190,3 +1190,55 @@ input[type='range']::-moz-range-thumb {
     white-space: nowrap;
   }
 }
+
+/* ---------- Store help ---------- */
+.store-help {
+  margin-top: 12px;
+  padding: 8px 12px 10px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.store-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sheet .store-head h3 {
+  margin: 0;
+  color: var(--text);
+}
+
+.store-line {
+  margin: 8px 0 4px;
+  font-size: 0.88rem;
+}
+
+.strength-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.strength-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.strength-row .chip {
+  width: 28px;
+  height: 28px;
+}
+
+.strength-arrow {
+  color: var(--muted);
+}
+
+.store-about p {
+  margin: 6px 0;
+}
