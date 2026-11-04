@@ -128,3 +128,12 @@ export const SearchIcon = () => (
     <path d="m20 20-3.5-3.5" />
   </svg>
 );
+export const MapIcon = () => (
+  <svg {...svg}>
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="8.5" cy="10" r="1.3" fill="currentColor" />
+    <circle cx="14.5" cy="8.5" r="1.3" fill="currentColor" />
+    <circle cx="15" cy="15" r="1.3" fill="currentColor" />
+    <circle cx="10" cy="15.5" r="1.3" fill="currentColor" />
+  </svg>
+);

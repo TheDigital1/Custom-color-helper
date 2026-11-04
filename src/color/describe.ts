@@ -6,7 +6,7 @@ import { approxLrv, oklabToLch, type OKLab } from './convert';
 import { SLIDER_BY_ID } from './sliders';
 
 /** OKLCH hue angles of common color names, in order around the wheel. */
-const HUE_NAMES: [number, string][] = [
+export const HUE_NAMES: [number, string][] = [
   [8, 'pink'],
   [30, 'red'],
   [55, 'orange'],

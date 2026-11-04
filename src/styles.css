@@ -1412,3 +1412,7 @@ input[type='range']::-moz-range-thumb {
 .ct-table .diff.neg {
   color: var(--warn);
 }
+
+a.icon-btn {
+  color: inherit;
+}

@@ -26,7 +26,7 @@ import { initialState, reducer } from './state';
 import { Compare, type CompareMode, type Panel } from './components/Compare';
 import { Footer } from './components/Footer';
 import { Search } from './components/Search';
-import { RedoIcon, ResetIcon, ShareIcon, SliderRow, UndoIcon } from './components/SliderRow';
+import { MapIcon, RedoIcon, ResetIcon, ShareIcon, SliderRow, UndoIcon } from './components/SliderRow';
 
 const FALLBACK: OKLab = hexToOklab('#EDEAE0')!;
 
@@ -262,6 +262,14 @@ export function App() {
           <button type="button" class="icon-btn" aria-label="Redo" disabled={!state.future.length} onClick={() => dispatch({ type: 'redo' })}>
             <RedoIcon />
           </button>
+          <a
+            class="icon-btn"
+            href={`./map.html#c=${state.current.map((n) => Math.round(n * 1e5) / 1e5).join(',')}`}
+            aria-label="Color map"
+            title="Explore the color map"
+          >
+            <MapIcon />
+          </a>
           <button type="button" class="icon-btn" aria-label="Share" onClick={share}>
             <ShareIcon />
           </button>
